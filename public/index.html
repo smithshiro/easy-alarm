@@ -1,0 +1,345 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>イージーアラーム!</title>
+    <link rel="stylesheet" href="style.css" />
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js" integrity="sha512-kp7YHLxuJDJcOzStgd6vtpxr4ZU9kjn77e6dBsivSz+pUuAuMlE2UTdKB7jjsWT84qbS8kdCWHPETnP/ctrFsA==" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <header><h1>Easy Alarm!</h1></header>
+    <div id="root">wait...</div>
+    <footer>
+      <div>Copyright &copy Smith 2021</div>
+      <div class="author-blog">
+        <span>Author's Blog -&gt</span>
+        <a href="https://shiro-secret-base.com" target="_blank">URL</a>
+      </div>
+    </footer>
+    <script type='text/babel'>
+    let dom = document.querySelector('#root');
+
+    // 時計コンポーネント
+    class Clock extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          hour: 0,
+          minute: 0,
+          second: 0
+        }
+      }
+      // 1秒おきにステートを更新
+      componentDidMount() {
+        let updateTime = () => {
+          const date = new Date();
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          const second = date.getSeconds();
+          this.setState({
+            hour,minute,second
+          });
+        };
+        updateTime();
+        setInterval(() => {
+          updateTime();
+        }, 1000);
+      }
+      render() {
+        return (
+          <div>
+            <ClockRound hour={this.state.hour} minute={this.state.minute} second={this.state.second} />
+            <Alerm hour={this.state.hour} minute={this.state.minute} second={this.state.second} />
+          </div>
+        );
+      }
+    }
+    // アラームコンポーネント(時刻をセットする、アラームを出す)
+    class Alerm extends React.Component {
+      alermChecker = null;
+      constructor(props) {
+        super(props);
+        this.state = {
+          enableAlerm: false,
+          alermTime: null,
+          isAlerming: false,
+          alermTime: ''
+        }
+        this.setAlerm = this.setAlerm.bind(this);
+        this.clearAlerm = this.clearAlerm.bind(this);
+        this.changeAlermTime = this.changeAlermTime.bind(this);
+        this.stopAlerm = this.stopAlerm.bind(this);
+        this.audio = new Audio('audio.mp3');
+      }
+      isAlerm() {
+        if (!this.state.enableAlerm) return false;
+        if (this.state.isAlerming) return false;
+        const alermTimeHour = this.state.alermTime.split(':')[0];
+        const alermTimeMinute = this.state.alermTime.split(':')[1];
+        if (alermTimeHour != this.props.hour) return false;
+        if (alermTimeMinute != this.props.minute) return false;
+        // 20秒以内ならアラームとする
+        if (this.props.second > 20) return false;
+        this.setState({isAlerming: true});
+        document.body.style = 'background: #ff9393';
+        return true;
+      }
+      setAlerm(e) {
+        e.preventDefault();
+        this.setState({enableAlerm: true});
+        this.alermChecker = setInterval(() => {
+          const result = this.isAlerm();
+          if(result) {
+            this.audio.play();
+          }
+        }, 1000);
+      }
+      clearAlerm(e) {
+        e.preventDefault();
+        this.setState({
+          enableAlerm: false,
+          alermTime: '',
+          isAlerming: false
+        });
+        document.body.style = 'background: #fafafa';
+        clearInterval(this.alermChecker);
+      }
+      changeAlermTime(e) {
+        this.setState({alermTime: e.target.value});
+      }
+      stopAlerm(e) {
+        e.preventDefault();
+        this.audio.pause();
+        this.clearAlerm(e);
+        document.body.style = 'background: #fafafa';
+      }
+      render() {
+        const hour = ('0' + this.props.hour).substr(-2);
+        const minute = ('0' + this.props.minute).substr(-2);
+        const second = ('0' + this.props.second).substr(-2);
+        let controllButton = () => {
+          if(!this.state.isAlerming) {
+            if (this.state.enableAlerm) {
+              return (
+                <button onClick={this.clearAlerm} className='formButton clearAlerm'>解除</button>
+              );
+            } else {
+              return (
+                <button onClick={this.setAlerm} className='formButton'>設定</button>
+              );
+            }
+          } else {
+            return (
+              <button onClick={this.stopAlerm} className='formButton stopAlerm'>停止</button>
+            );
+          }
+        }
+        return (
+          <div>
+            <div className='nowTime'>{hour + ':' + minute + ':' + second}</div>
+            <hr />
+            <form>
+              <div className='formElement'>
+                <label>アラーム：<input type='time' onChange={this.changeAlermTime} value={this.state.alermTime} /></label>
+              </div>
+              <div className='formElement'>
+                {controllButton()}
+              </div>
+            </form>
+          </div>
+        );
+      }
+    }
+    // 時計盤コンポーネント
+    class ClockRound extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      // メモリの位置を設定
+      makeMemoryStyle(i) {
+        let calcLeftPosition = function(i) {
+          let modify = function(i) {
+            switch (i) {
+              case 9:
+                return 0;
+              case 8:
+              case 10:
+                return 0.29;
+              case 7:
+              case 11:
+                return 0.55;
+              case 0:
+              case 6:
+                return -1;
+              case 1:
+              case 5:
+                return -4;
+              case 2:
+              case 4:
+                return -3.5;
+              case 3:
+                return -16;
+            }
+          }
+          return 100 * Math.cos(Math.PI / 2 - Math.PI / 6 * i) + modify(i) + 100;
+        }
+        let calcTopPosition = function(i) {
+          let modify = function(i) {
+            switch(i) {
+              case 0:
+              case 1:
+              case 2:
+              case 3:
+              case 9:
+              case 10:
+              case 11:
+                return 0;
+              case 4:
+              case 8:
+                return -2;
+              case 5:
+              case 7:
+                return -3;
+              case 6:
+                return -16;
+            }
+          }
+          return -100 * Math.sin(Math.PI / 2 - Math.PI / 6 * i) + modify(i) + 100;
+        }
+        return {
+          position: 'absolute',
+          left: calcLeftPosition(i) + 'px',
+          top: calcTopPosition(i) + 'px',
+          width: (i === 3 || i === 9) ? 16 : 4 + 'px',
+          height: (i === 0 || i === 6) ? 16 : 4 + 'px',
+          background: '#fafafa'
+        };
+      }
+      makeMemoryDOM() {
+        let dom = [];
+        for (let i = 0; i < 12; i++) {
+          const style = this.makeMemoryStyle(i);
+          dom.push(
+            <div key={i} style={style}></div>
+          );
+        }
+        return dom;
+      }
+      render() {
+        const style = {
+          margin: '50px auto 0px',
+          position: 'relative',
+          width: '200px',
+          height: '200px',
+          background: '#333',
+          borderRadius: '200px'
+        };
+        const memoryDOM = this.makeMemoryDOM();
+        return (
+          <div style={style}>
+            {memoryDOM}
+            <HourHand hour={this.props.hour} minute={this.props.minute} />
+            <MinuteHand minute={this.props.minute} />
+            <SecondHand second={this.props.second} />
+          </div>
+        );
+      }
+    }
+    // 時針コンポーネント
+    class HourHand extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      render() {
+        const center = {x: 100, y: 100};
+        const rotate = (this.props.hour + this.props.minute / 60) * 30;
+        const style = {
+          zIndex: '2',
+          position: 'absolute',
+          left: (center.x - 2) + 'px',
+          top: (-65 + center.y) + 'px',
+          width: '4px',
+          height: '80px',
+          background: '#7b7bff',
+          transformOrigin: '50% 84%',
+          transform: 'rotate(' + rotate + 'deg)'
+        };
+        return (
+          <div style={style}></div>
+        );
+      }
+    }
+    // 分針コンポーネント
+    class MinuteHand extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      render() {
+        const center = {x: 100, y: 100};
+        const rotate = this.props.minute * 6;
+        const style = {
+          zIndex: '1',
+          position: 'absolute',
+          left: (center.x - 2) + 'px',
+          top: (-100 + center.y) + 'px',
+          width: '4px',
+          height: '117px',
+          background: '#ff9393',
+          transformOrigin: '50% 86%',
+          transform: 'rotate(' + rotate + 'deg)'
+        };
+        return (
+          <div style={style}></div>
+        );
+      }
+    }
+    // 秒針コンポーネント
+    class SecondHand extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      render() {
+        const center = {x: 100, y:100};
+        const rotate = this.props.second * 6;
+        const style = {
+          zIndex: '3',
+          position: 'absolute',
+          left: (center.x - 0.5) + 'px',
+          top: (-100 + center.y) + 'px',
+          width: '1px',
+          height: '120px',
+          background: '#afffaf',
+          transformOrigin: '50% 86%',
+          transform: 'rotate(' + rotate + 'deg)'
+        };
+        return (
+          <div style={style}></div>
+        );
+      }
+    }
+    // 描画
+    let renderClock = function() {
+     const style = {
+       background: 'red'
+     };
+     let el = (
+       <Clock style={style} />
+     );
+     ReactDOM.render(el, dom);
+    };
+    renderClock();
+    </script>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="/__/firebase/8.2.7/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="/__/firebase/8.2.7/firebase-analytics.js"></script>
+
+    <!-- Initialize Firebase -->
+    <script src="/__/firebase/init.js"></script>
+  </body>
+</html>
