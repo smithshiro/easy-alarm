@@ -58,10 +58,10 @@ input[type='time'] {
   background: #52fddf;
   outline: 0;
 }
-.clearAlerm {
+.clearAlarm {
   background: #ff9393;
 }
-.stopAlerm {
+.stopAlarm {
   background: #a5a5a5;
 }
 .formElement {

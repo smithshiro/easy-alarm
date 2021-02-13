@@ -52,68 +52,68 @@
         return (
           <div>
             <ClockRound hour={this.state.hour} minute={this.state.minute} second={this.state.second} />
-            <Alerm hour={this.state.hour} minute={this.state.minute} second={this.state.second} />
+            <Alarm hour={this.state.hour} minute={this.state.minute} second={this.state.second} />
           </div>
         );
       }
     }
     // アラームコンポーネント(時刻をセットする、アラームを出す)
-    class Alerm extends React.Component {
+    class Alarm extends React.Component {
       alermChecker = null;
       constructor(props) {
         super(props);
         this.state = {
-          enableAlerm: false,
+          enableAlarm: false,
           alermTime: null,
-          isAlerming: false,
+          isAlarming: false,
           alermTime: ''
         }
-        this.setAlerm = this.setAlerm.bind(this);
-        this.clearAlerm = this.clearAlerm.bind(this);
-        this.changeAlermTime = this.changeAlermTime.bind(this);
-        this.stopAlerm = this.stopAlerm.bind(this);
+        this.setAlarm = this.setAlarm.bind(this);
+        this.clearAlarm = this.clearAlarm.bind(this);
+        this.changeAlarmTime = this.changeAlarmTime.bind(this);
+        this.stopAlarm = this.stopAlarm.bind(this);
         this.audio = new Audio('audio.mp3');
       }
-      isAlerm() {
-        if (!this.state.enableAlerm) return false;
-        if (this.state.isAlerming) return false;
+      isAlarm() {
+        if (!this.state.enableAlarm) return false;
+        if (this.state.isAlarming) return false;
         const alermTimeHour = this.state.alermTime.split(':')[0];
         const alermTimeMinute = this.state.alermTime.split(':')[1];
         if (alermTimeHour != this.props.hour) return false;
         if (alermTimeMinute != this.props.minute) return false;
         // 20秒以内ならアラームとする
         if (this.props.second > 20) return false;
-        this.setState({isAlerming: true});
+        this.setState({isAlarming: true});
         document.body.style = 'background: #ff9393';
         return true;
       }
-      setAlerm(e) {
+      setAlarm(e) {
         e.preventDefault();
-        this.setState({enableAlerm: true});
+        this.setState({enableAlarm: true});
         this.alermChecker = setInterval(() => {
-          const result = this.isAlerm();
+          const result = this.isAlarm();
           if(result) {
             this.audio.play();
           }
         }, 1000);
       }
-      clearAlerm(e) {
+      clearAlarm(e) {
         e.preventDefault();
         this.setState({
-          enableAlerm: false,
+          enableAlarm: false,
           alermTime: '',
-          isAlerming: false
+          isAlarming: false
         });
         document.body.style = 'background: #fafafa';
         clearInterval(this.alermChecker);
       }
-      changeAlermTime(e) {
+      changeAlarmTime(e) {
         this.setState({alermTime: e.target.value});
       }
-      stopAlerm(e) {
+      stopAlarm(e) {
         e.preventDefault();
         this.audio.pause();
-        this.clearAlerm(e);
+        this.clearAlarm(e);
         document.body.style = 'background: #fafafa';
       }
       render() {
@@ -121,19 +121,19 @@
         const minute = ('0' + this.props.minute).substr(-2);
         const second = ('0' + this.props.second).substr(-2);
         let controllButton = () => {
-          if(!this.state.isAlerming) {
-            if (this.state.enableAlerm) {
+          if(!this.state.isAlarming) {
+            if (this.state.enableAlarm) {
               return (
-                <button onClick={this.clearAlerm} className='formButton clearAlerm'>解除</button>
+                <button onClick={this.clearAlarm} className='formButton clearAlarm'>解除</button>
               );
             } else {
               return (
-                <button onClick={this.setAlerm} className='formButton'>設定</button>
+                <button onClick={this.setAlarm} className='formButton'>設定</button>
               );
             }
           } else {
             return (
-              <button onClick={this.stopAlerm} className='formButton stopAlerm'>停止</button>
+              <button onClick={this.stopAlarm} className='formButton stopAlarm'>停止</button>
             );
           }
         }
@@ -143,7 +143,7 @@
             <hr />
             <form>
               <div className='formElement'>
-                <label>アラーム：<input type='time' onChange={this.changeAlermTime} value={this.state.alermTime} /></label>
+                <label>アラーム：<input type='time' onChange={this.changeAlarmTime} value={this.state.alermTime} /></label>
               </div>
               <div className='formElement'>
                 {controllButton()}
